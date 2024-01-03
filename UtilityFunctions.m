@@ -110,29 +110,83 @@ classdef UtilityFunctions
             X_next = X_SC;
             V_next = V_SC;
         end
-    
-       function [e_angles_next, w_next] = RK4_euler(obj, dwdt, dt, e_angles, w, i)
-            % RK4 numerical solver
-        
-            dw1 = dt * dwdt(w(i,:));
-            d_euler1 = dt * obj.euler_dot(w(i,:), e_angles(i,:));
-        
-            dw2 = dt * dwdt(w(i,:) + 0.5 * dw1);
-            d_euler2 = dt * obj.euler_dot(w(i,:) + 0.5 * dw1, e_angles(i,:) + 0.5 * d_euler1);
-        
-            dw3 = dt * dwdt(w(i,:) + 0.5  * dw2);
-            d_euler3 = dt * obj.euler_dot(w(i,:) + 0.5 * dw2, e_angles(i,:) + 0.5 * d_euler2);
-        
-            dw4 = dt * dwdt(w(i,:) + dw3);
-            d_euler4 = dt * obj.euler_dot(w(i,:) + dw3, e_angles(i,:) +  d_euler3);
-        
-            w(i + 1,:) = w(i,:) +  (dw1 + 2*dw2 + 2*dw3 + dw4) / 6;
-            e_angles(i + 1,:) = e_angles(i,:) + (d_euler1 + 2*d_euler2 + 2*d_euler3 + d_euler4) / 6;
-        
-            e_angles_next = e_angles;
-            w_next = w;
-end
 
+
+        function out = ResultPlot(obj, T, x, P, true_val)
+        N = length(T);
+        var_names = ["b_1 (nT)", "b_2 (nT)", "b_3 (nT)","D_{1,1}  (-)", ...
+                    "D_{2,2} (-)", "D_{3,3}(-)", "D_{1,2}(-)", "D_{1,3}(-)", ...
+                    "D{2,3}(-)"];
+    
+            for i = 1:9
+                figure(i)
+                set(gcf, "Position", [100 100 1000 600])
+                
+                plot(T, x(:, i) - true_val(i), "Color", "k");
+                hold on
+                grid on
+                xlabel("Time (s)")
+                ylabel(var_names(i))
+        
+                bounds = zeros(N, 1);
+                for j = 1:N
+                    bounds(j)  = 3 * sqrt(P(i, i, j));
+                end
+                
+                % ylim([min(-bounds) max(bounds)])
+                % plot(T(1:end-1), bounds(1:end-1), "--", "Color", "red")
+                % plot(T(1:end-1), -bounds(1:end-1), "--", "Color", "red")
+                % xlim([0 100])
+            end
+
+        end
+           function xX = t_xX(obj, lat, sid)
+            % Topocentric to geocentric equatorial
+            xX = zeros(3,3);
+            xX(1,:) = [-sind(sid) -sind(lat)*cosd(sid) cosd(lat)*cosd(sid)];
+            xX(2,:) = [cosd(sid) -sind(lat)*sind(sid) cosd(lat)*sind(sid)];
+            xX(3,:) = [0 cosd(lat) sind(lat)];
+        end
+
+        function [ra, dec] = ECI2raDec(obj, R)
+            % Convert ECI coordinates to right ascension and declination.
+            R_hat = R/norm(R);
+            dec = asind(R_hat(3));
+            if R(2) > 0
+                ra = acosd(R_hat(1) / cosd(dec));
+            else
+                ra = 360 - acosd((R_hat(1) / cosd(dec)));
+            end
+        end
+
+        function X_ECI = ICRF2ECI(obj, X)
+            X_ECI = [1, 0, 0;...
+          0, cosd(23.44), -sind(23.44);...
+          0, sind(23.44),  cosd(23.44)] * X;
+        end
+
+        function X_ICRF = ECI2ICRF(obj, X)
+          X_ICRF = [1, 0, 0;...
+          0, cosd(-23.44), -sind(-23.44);...
+          0, sind(-23.44),  cosd(-23.44)] * X;
+        end
+
+
+        function v_rot = rodrigues_rot(obj, v, k, angle)
+            v_rot = v * cosd(angle) + cross(k,v) * sind(angle) + k * dot(k, v) * (1 - cosd(angle));
+        end
+
+
+        function dark = draw_space(obj)
+            set(gcf,'Color','black');
+            set(gca,'Color','black');
+            set(gca, 'GridColor', 'white'); 
+            set(gca, 'GridAlpha', 0.5);
+            set(gca, "XColor", "white");
+            set(gca, "YColor", "white");
+            set(gca, "ZColor", "white");
+            dark = 1;
+        end
 
     end
 end

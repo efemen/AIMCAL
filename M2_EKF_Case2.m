@@ -35,9 +35,7 @@ end
 x = zeros(N, 9); % EKF estimation vector.
 z = zeros(N, 1); % Measurements
 P = zeros(9, 9, N); % Covariances
-
-% P_k = 1E-6 * [300*eye(3), zeros(3, 6);
-%     zeros(6,3), 0.001 * eye(6)];    
+ 
 
 P_k =  [1000 * eye(3), zeros(3, 6);
     zeros(6,3), 0.001 * eye(6)];  
@@ -178,94 +176,103 @@ figure(4)
 title("Bias")
 
 subplot(3, 1, 1)
-plot(T, x(:, 1), "DisplayName", "b_1 (nT)", "Color", "#ff3366", "LineWidth", 2.5)
+plot(T, x(:, 1), "DisplayName", "Estimate", "Color", "r", "LineWidth", 2.5)
 hold on
-plot(T, b_true(:, 1), "--" ,"DisplayName", "b_1 (nT)", "Color", "#ff3366", "LineWidth", 2.5)
+plot(T, b_true(:, 1), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
 ylabel("b_1 (nT)")
 ylim([-abs(max(x_err(:, 1))), abs(max(x_err(:, 1)))])
 grid on
 hold on
+legend()
 
 subplot(3, 1, 2)
-plot(T, x_err(:, 2), "DisplayName", "\theta (^o)", "Color", "#ff7f11", "LineWidth", 2.5)
-ylabel("b_2 Error (nT)")
+plot(T, x(:, 2), "DisplayName", "Estimate", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T, b_true(:, 2) ,"DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("b_2 (nT)")
 ylim([-abs(max(x_err(:, 2))), abs(max(x_err(:, 2)))])
 grid on
-subplot(3, 1, 3)
+legend()
 
-plot(T, x_err(:, 3), "Color", "#011627", "LineWidth", 2.5)
-ylabel("b_3 Error (nT)")
+subplot(3, 1, 3)
+plot(T, x(:, 3), "DisplayName", "Estimate", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T, b_true(:, 3) ,"DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("b_3 (nT)")
 ylim([-abs(max(x_err(:, 3))), abs(max(x_err(:, 3)))])
 xlabel("Time (s)")
 grid on
 fontsize(15, "points")
+legend()
 
 set(gcf,'position',[0,0, 1280, 750])
-
 
 figure(5)
 title("D Matrix")
 subplot(3, 1, 1)
-plot(T, x(:, 4), "DisplayName", "Estimated", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T, x(:, 4), "DisplayName", "Estimate", "Color", "r", "LineWidth", 2.5)
 hold on
-plot(T, ones(N, 1) * D_k0(1), "DisplayName", "True", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T, ones(N, 1) * D_k0(1), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
 
-ylabel("D_{1,1} Error (-)")
+
+ylabel("D_{1,1} (-)")
 ylim([-abs(max(x_err(:, 4))), abs(max(x_err(:, 4)))])
 grid on
-hold on
+legend("Location", "best")
+
 subplot(3, 1, 2)
-plot(T, x(:, 5), "DisplayName", "Estimated", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T, x(:, 5), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
 hold on
-plot(T,  ones(N, 1) *D_k0(2), "DisplayName", "True", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T,  ones(N, 1) *D_k0(2), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
 ylim([-abs(max(x_err(:, 5))), abs(max(x_err(:, 5)))])
-ylabel("D_{2,2} Error (-)")
+ylabel("D_{2,2} (-)")
 grid on
+legend("Location", "best")
 
 subplot(3, 1, 3)
-plot(T, x(:, 6), "DisplayName", "Estimated", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T, x(:, 6), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
 hold on
-plot(T, ones(N, 1) * D_k0(3), "DisplayName", "True", "Color", "#ffa400", "LineWidth", 2.5)
-ylabel("D_{3,3} Error (-)")
+plot(T, ones(N, 1) * D_k0(3), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("D_{3,3} (-)")
 grid on
 ylim([-abs(max(x_err(:, 6))), abs(max(x_err(:, 6)))])
 set(gcf,'position',[0,0, 1280, 750])
 fontsize(15, "points")
+legend("Location", "best")
 
 figure(6)
 subplot(3, 1, 1)
-plot(T, x(:, 7), "DisplayName", "Estimated", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T, x(:, 7), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
 hold on
-plot(T,  ones(N, 1) * D_k0(4), "DisplayName", "True", "Color", "#ffa400", "LineWidth", 2.5)
-ylabel("D_{1,2} Error (-)")
+plot(T,  ones(N, 1) * D_k0(4), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("D_{1,2} (-)")
 grid on
 hold on
 ylim([-abs(max(x_err(:, 7))), abs(max(x_err(:, 7)))])
-
+legend("Location", "best")
 
 subplot(3, 1, 2)
-plot(T, x(:, 8), "DisplayName", "Estimated", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T, x(:, 8), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
 hold on
-plot(T,  ones(N, 1) * D_k0(5), "DisplayName", "True", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T,  ones(N, 1) * D_k0(5), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
 ylim([-abs(max(x_err(:, 8))), abs(max(x_err(:, 8)))])
-ylabel("D_{1,3} Error (-)")
+ylabel("D_{1,3} (-)")
 grid on
+legend("Location", "best")
 
 subplot(3, 1, 3)
-plot(T, x(:, 9), "DisplayName", "Estimated", "Color", "#ffa400", "LineWidth", 2.5)
+plot(T, x(:, 9), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
 hold on
-plot(T,  ones(N, 1) * D_k0(6), "DisplayName", "True", "Color", "#ffa400", "LineWidth", 2.5)
-ylabel("D_{2,3} Error (-)")
+plot(T,  ones(N, 1) * D_k0(6), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("D_{2,3} (-)")
 ylim([-abs(max(x_err(:, 9))), abs(max(x_err(:, 9)))])
 set(gcf,'position',[0,0, 1280, 750])
 fontsize(15, "points")
-
-
-xlabel("Time (s)")
+legend("Location", "best")
 grid on
+xlabel("Time (s)")
 
+x_true = repmat(x_true', N, 1);
+x_true(:, 1:3) = b_true;
 
-
-
-
-
+rmse = sqrt(sum((x - x_true).^2) / N);

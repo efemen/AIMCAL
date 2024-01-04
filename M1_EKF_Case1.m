@@ -1,7 +1,9 @@
 clear; clc;
 
-load TrueModelData.mat
+% load TrueModelData.mat
+load TrueModelDataMagm.mat
 
+% save_path = "./plots/case1_p1_igrf/";
 uf = UtilityFunctions();
 % s = rng(501); % Setting random number generator seed for repeatability.
 
@@ -33,11 +35,11 @@ x = zeros(N, 9);    % EKF estimation vector.
 z = zeros(N, 1);    % Measurements
 P = zeros(9, 9, N); % Covariances
 
-P_k =  [1000 * eye(3), zeros(3, 6);
-    zeros(6,3), 0.001 * eye(6)];  
+% P_k =  [1000 * eye(3), zeros(3, 6);
+%     zeros(6,3), 0.001 * eye(6)];  
 
-% P_k =  [50000 * eye(3), zeros(3, 6);
-%         zeros(6,3), 100 * eye(6)];  
+P_k =  [3000 * eye(3), zeros(3, 6);
+        zeros(6,3), 1 * eye(6)];  
 
 R = n_tam^2;
 
@@ -45,8 +47,10 @@ b0 = 2.8 * b_true;
 D0 = 2.8 * D_true;
 
 
-D_k = [D0(1,1), D0(2,2), D0(2,2), D0(1, 2), D0(1, 3), D0(2, 3)]';
-x_k = [b0; D_k];
+
+D_k0 = [D0(1,1), D0(2,2), D0(2,2), D0(1, 2), D0(1, 3), D0(2, 3)]';
+
+x_k = [b0; D_k0];
 
 x(1, :) = x_k';
 
@@ -79,10 +83,7 @@ for i = 1:N-1
     
     % Update
     z_k = norm(B_tam(i, :))^2 - norm(B_true(i, :))^2;     % Observation.
-    
-    % sig = 4 * ((eye(3) + D) * B - b)' * (eye(3) * n_tam) * ((eye(3) + D) * B - b) + 2 * trace((eye(3) * n_tam)^2);
-    % R = sig;
-
+   
     K_k = (P_k * H') / (H * P_k * H' + R);                % Kalman gain update.
     x_k = x_k + K_k * (z_k - H * x_k);                    % State update.
     P_k = (eye(9) - K_k * H) * P_k;                       % Covariance matrix update. 
@@ -92,6 +93,9 @@ end
 
 
 x_err = -x + x_true';
+
+rmse = sqrt(sum((x - repmat(x_true', N, 1)).^2) / N)
+
 
 figure(1)
 title("Bias Estimate")
@@ -118,7 +122,7 @@ grid on
 fontsize(15, "points")
 
 set(gcf,'position',[0,0, 1280, 750])
-
+exportgraphics(gcf, save_path + "b_error.png");
 
 figure(2)
 title("D Matrix")
@@ -140,7 +144,10 @@ ylabel("D_{3,3} Error (-)")
 grid on
 ylim([-abs(max(x_err(:, 6))), abs(max(x_err(:, 6)))])
 set(gcf,'position',[0,0, 1280, 750])
+xlabel("Time (s)")
 fontsize(15, "points")
+exportgraphics(gcf, save_path + "d_error.png");
+
 
 figure(3)
 subplot(3, 1, 1)
@@ -163,7 +170,113 @@ ylabel("D_{2,3} Error (-)")
 ylim([-abs(max(x_err(:, 9))), abs(max(x_err(:, 9)))])
 set(gcf,'position',[0,0, 1280, 750])
 fontsize(15, "points")
+xlabel("Time (s)")
 
+exportgraphics(gcf, save_path + "d2_error.png");
 
+figure(4)
+title("Bias")
+
+subplot(3, 1, 1)
+plot(T, x(:, 1) ,"DisplayName", "Estimate", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T, ones(N, 1) * b_true(1),"DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("b_1 (nT)")
+ylim([-abs(max(x_err(:, 1))), abs(max(x_err(:, 1)))])
+grid on
+hold on
+legend("Location", "best")
+
+subplot(3, 1, 2)
+plot(T, x(:, 2), "DisplayName", "Estimate", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T, ones(N, 1) * b_true(2), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("b_2 (nT)")
+ylim([-abs(max(x_err(:, 2))), abs(max(x_err(:, 2)))])
+grid on
+legend("Location", "best")
+
+subplot(3, 1, 3)
+
+plot(T, x(:, 3), "DisplayName", "Estimate", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T, ones(N, 1) * b_true(3), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+
+ylabel("b_3 (nT)")
+ylim([-abs(max(x_err(:, 3))), abs(max(x_err(:, 3)))])
 xlabel("Time (s)")
 grid on
+fontsize(15, "points")
+legend("Location", "best")
+set(gcf,'position',[0,0, 1280, 750])
+exportgraphics(gcf, save_path + "b.png");
+
+figure(5)
+title("D Matrix")
+subplot(3, 1, 1)
+plot(T, x(:, 4), "DisplayName", "Estimate", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T, ones(N, 1) * D_k0(1), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+
+
+ylabel("D_{1,1} (-)")
+ylim([-abs(max(x_err(:, 4))), abs(max(x_err(:, 4)))])
+grid on
+legend("Location", "best")
+
+subplot(3, 1, 2)
+plot(T, x(:, 5), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T,  ones(N, 1) *D_k0(2), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylim([-abs(max(x_err(:, 5))), abs(max(x_err(:, 5)))])
+ylabel("D_{2,2} (-)")
+grid on
+legend("Location", "best")
+
+subplot(3, 1, 3)
+plot(T, x(:, 6), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T, ones(N, 1) * D_k0(3), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("D_{3,3} (-)")
+grid on
+ylim([-abs(max(x_err(:, 6))), abs(max(x_err(:, 6)))])
+set(gcf,'position',[0,0, 1280, 750])
+fontsize(15, "points")
+legend("Location", "best")
+exportgraphics(gcf, save_path + "d.png");
+
+
+figure(6)
+subplot(3, 1, 1)
+plot(T, x(:, 7), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T,  ones(N, 1) * D_k0(4), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("D_{1,2} (-)")
+grid on
+hold on
+ylim([-abs(max(x_err(:, 7))), abs(max(x_err(:, 7)))])
+legend("Location", "best")
+
+subplot(3, 1, 2)
+plot(T, x(:, 8), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T,  ones(N, 1) * D_k0(5), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylim([-abs(max(x_err(:, 8))), abs(max(x_err(:, 8)))])
+ylabel("D_{1,3} (-)")
+grid on
+legend("Location", "best")
+
+subplot(3, 1, 3)
+plot(T, x(:, 9), "DisplayName", "Estimated", "Color", "r", "LineWidth", 2.5)
+hold on
+plot(T,  ones(N, 1) * D_k0(6), "DisplayName", "True", "Color", "k", "LineWidth", 2.5)
+ylabel("D_{2,3} (-)")
+ylim([-abs(max(x_err(:, 9))), abs(max(x_err(:, 9)))])
+set(gcf,'position',[0,0, 1280, 750])
+fontsize(15, "points")
+legend("Location", "best")
+grid on
+xlabel("Time (s)")
+exportgraphics(gcf, save_path + "d2.png");
+
+

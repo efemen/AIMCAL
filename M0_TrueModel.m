@@ -10,8 +10,7 @@ earth = CelestialObject("Earth", 5.97217e24, 6371.0084, 1.49598e8, 23.43928, jdt
 
 elements = OrbitalElements(pos, vel, earth.mu); % Orbital elements
 
-% m = 2.5197E+04; % kg, most of the mass belongs to the Centaur Upper Stage.
-m = 500; % kg
+m = 2.5197E+04; % kg, most of the mass belongs to the Centaur Upper Stage.
 I = m * [1.2 0 0; 0 1.1 0; 0 0 0.8]; % kg * m^2
 
 I1 = I(1, 1);
@@ -63,7 +62,8 @@ for i = 1:N-1
     X_ecef(i, :) = uf.ECI2ECEF(X_SC(i, :), sdt);  % ECI to ECEF conversion.
 
     LLA_SC(i, :) = ecef2lla(1e3 * X_ecef(i, :), 'WGS84');    % Lat, lon, alt from ECEF
-    B_NED = igrfmagm(LLA_SC(i, 3), LLA_SC(i, 2), LLA_SC(i, 1), decyear(date_vector(i)) - 20); % 2043 is invalid.
+    % B_NED = igrfmagm(LLA_SC(i, 3), LLA_SC(i, 2), LLA_SC(i, 1), decyear(date_vector(i)) - 20); % 2043 is invalid.
+    B_NED = wrldmagm(LLA_SC(i, 3), LLA_SC(i, 2), LLA_SC(i, 1), decyear(date_vector(i)) - 20)'; % 2043 is invalid.
     B_true(i, :) = uf.ECEF2ECI(uf.NED2ECEF(B_NED', LLA_SC(i, 1), LLA_SC(i, 2))', sdt);
 end
 
@@ -114,5 +114,29 @@ fontsize(15, "points")
 xlabel("Time (s)")
 grid on
 
+figure(3)
+title("B_{true}")
+subplot(3, 1, 1)
+plot(T(1:end-1), B_true(1:end-1, 1), "DisplayName", "\omega_1", "Color", "#ffa400", "LineWidth", 2.5)
+ylabel("B_x")
+grid on
+hold on
+subplot(3, 1, 2)
+plot(T(1:end-1), B_true(1:end-1, 2), "DisplayName", "\omega_2", "Color", "#009ffd", "LineWidth", 2.5)
+ylabel("B_y")
+grid on
 
-save TrueModelData.mat T X_SC B_true eulers_deg
+subplot(3, 1, 3)
+plot(T(1:end-1), B_true(1:end-1, 3), "DisplayName", "\omega_3", "Color", "#2a2a72", "LineWidth", 2.5)
+ylabel("B_z")
+
+set(gcf,'position',[0,0, 1280, 750])
+fontsize(15, "points")
+
+
+xlabel("Time (s)")
+grid on
+
+
+% save TrueModelData.mat T X_SC B_true eulers_deg
+% save TrueModelDataMagm.mat
